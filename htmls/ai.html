@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>共建 AI 概念版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 0 20px;
+            background-color: #f5f7fa;
+            line-height: 1.6;
+        }
+        .container {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        h2 {
+            color: #34495e;
+            margin-bottom: 12px;
+            font-size: 18px;
+            border-left: 4px solid #3498db;
+            padding-left: 10px;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dcdfe6;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 12px;
+            font-family: monospace;
+        }
+        .param-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .param-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #606266;
+            font-size: 14px;
+        }
+        input[type="number"], input[type="range"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #dcdfe6;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-train {
+            background-color: #3498db;
+            color: #fff;
+        }
+        .btn-train:hover {
+            background-color: #2980b9;
+        }
+        .btn-generate {
+            background-color: #27ae60;
+            color: #fff;
+        }
+        .btn-generate:hover {
+            background-color: #219653;
+        }
+        .btn-generate:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .result-box {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #e9ecef;
+            min-height: 60px;
+            white-space: pre-wrap;
+            font-size: 15px;
+        }
+        .process-box {
+            background-color: #f0f5ff;
+            border-radius: 6px;
+            padding: 15px;
+            border: 1px solid #d0e0ff;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 13px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .tip {
+            color: #909399;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        .status {
+            color: #e74c3c;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>共建 AI 概念版</h1>
+
+    <!-- 训练语料区 -->
+    <div class="container">
+        <h2>1. 预训练数据</h2>
+        <textarea id="corpus" rows="6">我喜欢吃苹果。我喜欢吃香蕉。我喜欢喝牛奶。
+小猫喜欢吃鱼。小狗喜欢啃骨头。小鸟喜欢在天上飞。小鱼喜欢在水里游。
+我每天早上喝牛奶。小猫每天抓老鼠。小狗每天陪主人散步。
+春天花开了。夏天天气热。秋天叶子黄了。冬天会下雪。
+周一要上班。周六要休息。周日去公园玩。
+我和小猫玩。小狗和主人散步。小鸟在树上唱歌。</textarea>
+        <div class="btn-group">
+            <button class="btn-train" id="trainBtn">开始训练AI模型</button>
+        </div>
+        <div class="status" id="trainStatus">状态：模型未训练，请先点击训练按钮</div>
+    </div>
+
+    <!-- 生成参数区 -->
+    <div class="container">
+        <h2>2. 生成设置</h2>
+        <div class="param-group">
+            <div class="param-item">
+                <label for="prompt">提示词 Prompt</label>
+                <textarea id="prompt" rows="2" placeholder="例如：我喜欢">我喜欢</textarea>
+            </div>
+        </div>
+        <div class="param-group">
+            <div class="param-item">
+                <label for="maxLength">生成最大长度</label>
+                <input type="number" id="maxLength" value="20" min="1" max="100">
+            </div>
+            <div class="param-item">
+                <label for="temperature">温度系数 <span id="tempValue">0.5</span></label>
+                <input type="range" id="temperature" min="0.1" max="2" step="0.1" value="0.5">
+            </div>
+        </div>
+        <div class="btn-group">
+            <button class="btn-generate" id="generateBtn" disabled>开始生成</button>
+        </div>
+    </div>
+
+    <!-- 结果展示区 -->
+    <div class="container">
+        <h2>3. 生成结果</h2>
+        <div class="result-box" id="result">等待生成...</div>
+    </div>
+
+    <!-- 过程可视化区 -->
+    <div class="container">
+        <h2>4. 深度过程</h2>
+        <div class="process-box" id="process">等待生成...</div>
+    </div>
+    
+    <div class="cjai">
+        <h2>（c）2026 共建智能 保留所有权利</h2>
+    </div>
+    <script>
+        // ==============================================
+        // 核心：小语言模型实现（对应大模型完整逻辑）
+        // ==============================================
+        class SimpleLLM {
+            constructor() {
+                // 模型核心参数
+                this.tokenizer = new SimpleTokenizer(); // 分词器（对应大模型的Tokenizer）
+                this.transitionMap = new Map(); // 转移概率矩阵（对应大模型训练学到的参数）
+                this.isTrained = false; // 模型训练状态
+            }
+
+            // 1. 预训练函数（对应大模型的预训练环节）
+            train(corpus) {
+                // 步骤1：对语料进行分词，得到token序列
+                const tokens = this.tokenizer.tokenize(corpus);
+                if (tokens.length < 2) {
+                    throw new Error("语料太短，无法训练，请输入更多文本");
+                }
+
+                // 步骤2：统计二元语法（Bigram）的词频，学习token之间的转移规律
+                // 对应大模型学习语言的统计规律，只是大模型用Transformer+深度学习，这里用统计概率简化
+                this.transitionMap.clear();
+                for (let i = 0; i < tokens.length - 1; i++) {
+                    const currentToken = tokens[i];
+                    const nextToken = tokens[i + 1];
+
+                    // 统计当前token后面，每个下一个token的出现次数
+                    if (!this.transitionMap.has(currentToken)) {
+                        this.transitionMap.set(currentToken, new Map());
+                    }
+                    const nextTokenMap = this.transitionMap.get(currentToken);
+                    nextTokenMap.set(nextToken, (nextTokenMap.get(nextToken) || 0) + 1);
+                }
+
+                this.isTrained = true;
+                return {
+                    tokenCount: tokens.length,
+                    uniqueTokenCount: this.transitionMap.size,
+                    tokens
+                };
+            }
+
+            // 2. 预测下一个token（对应大模型的核心任务：下一个token预测）
+            predictNextToken(currentToken, temperature = 0.5) {
+                // 如果当前token不在训练数据中，返回null
+                if (!this.transitionMap.has(currentToken)) {
+                    return null;
+                }
+
+                const nextTokenMap = this.transitionMap.get(currentToken);
+                const candidates = Array.from(nextTokenMap.entries());
+
+                // 步骤1：计算每个候选token的概率
+                const totalCount = candidates.reduce((sum, [_, count]) => sum + count, 0);
+                let logits = candidates.map(([token, count]) => ({
+                    token,
+                    logit: Math.log(count / totalCount) // 对数概率（对应大模型的logits输出）
+                }));
+
+                // 步骤2：温度系数缩放（和真实大模型的温度采样逻辑完全一致）
+                logits = logits.map(item => ({
+                    token: item.token,
+                    logit: item.logit / temperature
+                }));
+
+                // 步骤3：Softmax转换为概率分布
+                const maxLogit = Math.max(...logits.map(item => item.logit));
+                const expSum = logits.reduce((sum, item) => sum + Math.exp(item.logit - maxLogit), 0);
+                const probabilities = logits.map(item => ({
+                    token: item.token,
+                    probability: Math.exp(item.logit - maxLogit) / expSum
+                }));
+
+                // 步骤4：加权随机采样（轮盘赌算法），选出下一个token
+                const random = Math.random();
+                let cumulativeProbability = 0;
+                for (const item of probabilities) {
+                    cumulativeProbability += item.probability;
+                    if (random <= cumulativeProbability) {
+                        return {
+                            token: item.token,
+                            probabilities: probabilities.sort((a, b) => b.probability - a.probability)
+                        };
+                    }
+                }
+
+                // 兜底返回概率最高的token
+                return {
+                    token: probabilities[0].token,
+                    probabilities: probabilities.sort((a, b) => b.probability - a.probability)
+                };
+            }
+
+            // 3. 自回归生成文本（对应大模型的文本生成完整流程）
+            generate(prompt, maxLength = 20, temperature = 0.5) {
+                if (!this.isTrained) {
+                    throw new Error("模型未训练，请先完成训练");
+                }
+
+                // 步骤1：对提示词进行分词，得到初始序列
+                const promptTokens = this.tokenizer.tokenize(prompt);
+                const generatedTokens = [...promptTokens];
+                const processLogs = [];
+                processLogs.push(`初始提示词分词结果：[${promptTokens.join(' | ')}]`);
+                processLogs.push('==================== 开始逐token生成 ====================');
+
+                // 步骤2：自回归循环生成，直到达到最大长度
+                for (let step = 0; step < maxLength; step++) {
+                    const lastToken = generatedTokens[generatedTokens.length - 1];
+                    const predictResult = this.predictNextToken(lastToken, temperature);
+
+                    // 没有可预测的token，提前终止生成
+                    if (!predictResult) {
+                        processLogs.push(`步骤 ${step + 1}：当前token【${lastToken}】无后续训练数据，生成终止`);
+                        break;
+                    }
+
+                    // 记录生成过程
+                    const { token, probabilities } = predictResult;
+                    const top3Prob = probabilities.slice(0, 3).map(p => `${p.token}:${(p.probability * 100).toFixed(1)}%`).join(' | ');
+                    processLogs.push(`步骤 ${step + 1}：当前结尾【${lastToken}】| 预测选中【${token}】| 候选Top3：${top3Prob}`);
+
+                    // 将预测的token加入生成序列，进入下一轮循环（自回归核心）
+                    generatedTokens.push(token);
+                }
+
+                // 步骤3：将token序列还原为文本
+                const generatedText = this.tokenizer.detokenize(generatedTokens);
+                processLogs.push('==================== 生成完成 ====================');
+                processLogs.push(`最终生成的完整token序列：[${generatedTokens.join(' | ')}]`);
+
+                return {
+                    generatedText,
+                    generatedTokens,
+                    processLogs: processLogs.join('\n')
+                };
+            }
+        }
+
+        // ==============================================
+        // 极简分词器（对应大模型的Tokenizer）
+        // ==============================================
+        class SimpleTokenizer {
+            // 分词：文本转token序列
+            tokenize(text) {
+                // 统一转小写，减少冗余
+                text = text.toLowerCase().trim();
+                const tokens = [];
+                let current = '';
+
+                // 简单适配中英文：中文按单个字拆分，英文/数字按空格和标点拆分
+                for (const char of text) {
+                    if (this.isChinese(char)) {
+                        if (current) {
+                            tokens.push(current);
+                            current = '';
+                        }
+                        tokens.push(char);
+                    } else if (this.isPunctuation(char)) {
+                        if (current) {
+                            tokens.push(current);
+                            current = '';
+                        }
+                        tokens.push(char);
+                    } else if (char.match(/\s/)) {
+                        if (current) {
+                            tokens.push(current);
+                            current = '';
+                        }
+                    } else {
+                        current += char;
+                    }
+                }
+
+                if (current) {
+                    tokens.push(current);
+                }
+
+                return tokens;
+            }
+
+            // 还原：token序列转文本
+            detokenize(tokens) {
+                let text = '';
+                for (let i = 0; i < tokens.length; i++) {
+                    const token = tokens[i];
+                    const nextToken = tokens[i + 1];
+                    text += token;
+                    // 英文单词之间加空格
+                    if (!this.isChinese(token) && !this.isPunctuation(token) && nextToken && !this.isChinese(nextToken) && !this.isPunctuation(nextToken)) {
+                        text += ' ';
+                    }
+                }
+                return text;
+            }
+
+            // 判断是否为中文
+            isChinese(char) {
+                return char.match(/[\u4e00-\u9fa5]/);
+            }
+
+            // 判断是否为标点
+            isPunctuation(char) {
+                return char.match(/[。，！？；：""''()（）、.,!?;:"']/);
+            }
+        }
+
+        // ==============================================
+        // 页面交互逻辑
+        // ==============================================
+        // 初始化模型
+        const llm = new SimpleLLM();
+
+        // DOM元素
+        const trainBtn = document.getElementById('trainBtn');
+        const generateBtn = document.getElementById('generateBtn');
+        const corpusInput = document.getElementById('corpus');
+        const promptInput = document.getElementById('prompt');
+        const maxLengthInput = document.getElementById('maxLength');
+        const temperatureInput = document.getElementById('temperature');
+        const tempValue = document.getElementById('tempValue');
+        const trainStatus = document.getElementById('trainStatus');
+        const resultBox = document.getElementById('result');
+        const processBox = document.getElementById('process');
+
+        // 温度滑块同步显示
+        temperatureInput.addEventListener('input', () => {
+            tempValue.textContent = temperatureInput.value;
+        });
+
+        // 训练按钮点击事件
+        trainBtn.addEventListener('click', () => {
+            const corpus = corpusInput.value.trim();
+            if (!corpus) {
+                trainStatus.textContent = '状态：训练失败，语料不能为空';
+                trainStatus.style.color = '#e74c3c';
+                return;
+            }
+
+            try {
+                const trainResult = llm.train(corpus);
+                trainStatus.textContent = `状态：训练完成！共学习 ${trainResult.tokenCount} 个token，${trainResult.uniqueTokenCount} 个唯一token`;
+                trainStatus.style.color = '#27ae60';
+                generateBtn.disabled = false;
+                resultBox.textContent = '模型训练完成，请输入提示词并点击生成按钮';
+                processBox.textContent = '等待生成...';
+            } catch (error) {
+                trainStatus.textContent = `状态：训练失败，${error.message}`;
+                trainStatus.style.color = '#e74c3c';
+            }
+        });
+
+        // 生成按钮点击事件
+        generateBtn.addEventListener('click', () => {
+            const prompt = promptInput.value.trim();
+            const maxLength = parseInt(maxLengthInput.value);
+            const temperature = parseFloat(temperatureInput.value);
+
+            if (!prompt) {
+                resultBox.textContent = '提示词不能为空';
+                return;
+            }
+
+            try {
+                const generateResult = llm.generate(prompt, maxLength, temperature);
+                resultBox.textContent = generateResult.generatedText;
+                processBox.textContent = generateResult.processLogs;
+            } catch (error) {
+                resultBox.textContent = `生成失败：${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
