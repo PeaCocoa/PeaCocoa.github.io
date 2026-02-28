@@ -1,4 +1,0 @@
-{CJAI.html;CJAI;共建智能主页}
-{ai.html;共建AI概念版;一个人工智能}
-{wenzi.html;拒绝网络用语;网络热梗多种多样，可多样优美的中国话也不少。}
-{pan.html;Pea网盘;PeaCocoa的网盘}
