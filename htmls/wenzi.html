@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拒绝网络用语</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #FFFFFF;
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.8;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 24px;
+            border: 1px solid #d0d0d0;
+            border-radius: 20px;
+            font-size: 18px;
+            color: #333333;
+            font-family: inherit;
+            resize: none;
+            background-color: #f5f5f5;
+            transition: border-color 0.3s ease;
+            line-height: 2;
+            box-shadow: none;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #999999;
+        }
+
+        textarea::placeholder {
+            color: #cccccc;
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <textarea
+            id="inputText"
+            placeholder="网络热梗多种多样，可多样优美的中国话也不少，请输入语段文本，我来帮你转优美。"
+        ></textarea>
+    </div>
+
+    <script>
+        // 转换规则映射表 - 每个网络用语对应多个成语方案
+        const conversionRules = [
+            { slang: '包的', idioms: ['志在必得', '稳操胜券', '胸有成竹'] },
+            { slang: 'yyds', idioms: ['绝世无双', '举世无双', '无出其右', '登峰造极', '空前绝后'] },
+            { slang: '绝了', idioms: ['叹为观止', '拍案叫绝', '赞叹不已', '叹为观止'] },
+            { slang: '牛', idioms: ['出类拔萃', '出人头地', '出奇制胜', '超群绝伦'] },
+            { slang: '冲', idioms: ['一往无前', '勇往直前', '锐意进取', '奋发图强'] },
+            { slang: '666', idioms: ['巧夺天工', '妙笔生花', '神工鬼斧', '炉火纯青'] },
+            { slang: '躺平', idioms: ['随遇而安', '安之若素', '听之任之', '安然自若'] },
+            { slang: '摸鱼', idioms: ['怡然自得', '悠然自得', '闲情逸致', '悠哉游哉'] },
+            { slang: 'emo', idioms: ['郁郁寡欢', '愁眉不展', '忧心忡忡', '闷闷不乐'] },
+            { slang: '内卷', idioms: ['力争上游', '力争上游', '奋发向上', '精进不休'] },
+            { slang: '摆烂', idioms: ['顺其自然', '听天由命', '随波逐流', '得过且过'] },
+            { slang: '绝绝子', idioms: ['精妙绝伦', '登峰造极', '无出其右', '出神入化', '举世无双'] },
+            { slang: '栓Q', idioms: ['衷心感谢', '千恩万谢', '感怀在心', '铭感五内'] },
+            { slang: '泰酷辣', idioms: ['妙趣横生', '妙趣无穷', '妙不可言', '趣味横生'] },
+            { slang: '干饭', idioms: ['大快朵颐', '饕餮盛宴', '大饱口福', '食指大动'] },
+            { slang: '芭比Q', idioms: ['木已成舟', '覆水难收', '大势已去', '无可挽回'] },
+            { slang: '上头', idioms: ['情不自禁', '难以自拔', '心驰神往', '如痴如醉'] },
+            { slang: '凡尔赛', idioms: ['锦上添花', '如虎添翼', '美中不足', '雪中送炭'] },
+            { slang: '破防', idioms: ['心如刀割', '悲痛欲绝', '捶胸顿足', '痛彻心扉'] },
+            { slang: 'CPU', idioms: ['冥思苦想', '苦思冥想', '绞尽脑汁', '深思熟虑'] },
+            { slang: '真香', idioms: ['刮目相看', '另眼相看', '改弦更张', '回心转意'] },
+            { slang: '嗑到', idioms: ['如胶似漆', '情投意合', '情同手足', '相濡以沫'] },
+            { slang: '整活', idioms: ['别出心裁', '标新立异', '别开生面', '独树一帜'] },
+            { slang: '拿捏', idioms: ['把握良机', '尽在掌握', '胸有成竹', '成竹在胸'] },
+            { slang: '芭比Q', idioms: ['在劫难逃', '无可挽回', '大势已去', '覆水难收'] },
+            { slang: '无语', idioms: ['沉默寡言', '哑口无言', '三缄其口', '无言以对'] },
+            { slang: '太绝', idioms: ['叹为观止', '拍案叫绝', '赞叹不已', '叹为观止'] },
+            { slang: '稳了', idioms: ['十拿九稳', '胜券在握', '胸有成竹', '稳操胜券'] },
+            { slang: '拿捏', idioms: ['尽在掌握', '成竹在胸', '胸有成竹', '把握良机'] },
+            { slang: '绝了', idioms: ['拍案叫绝', '赞叹不已', '惊为天人', '叹为观止'] },
+            { slang: '真的很绝', idioms: ['叹为观止', '拍案叫绝', '赞叹不已', '惊叹不已'] },
+            { slang: '牛', idioms: ['出类拔萃', '出人头地', '超群绝伦', '出奇制胜'] },
+            { slang: '真牛逼', idioms: ['出类拔萃', '超群绝伦', '非同凡响', '无与伦比'] },
+            { slang: '稳稳的', idioms: ['十拿九稳', '稳操胜券', '胜券在握', '安如泰山'] },
+            { slang: '稳了', idioms: ['胸有成竹', '成竹在胸', '十拿九稳', '胜券在握'] },
+            { slang: '拿捏死', idioms: ['尽在掌握', '成竹在胸', '胸有成竹', '稳操胜券'] },
+            { slang: '绝了绝', idioms: ['叹为观止', '拍案叫绝', '赞叹不已', '惊为天人'] },
+            { slang: '冲冲冲', idioms: ['奋勇向前', '昂首阔步', '勇往直前', '一往无前'] },
+            { slang: '打call', idioms: ['声援支持', '鼎力相助', '推波助澜', '摇旗呐喊'] },
+            { slang: '太上头', idioms: ['难以忘怀', '铭心刻骨', '刻骨铭心', '念念不忘'] },
+            { slang: '很上头', idioms: ['意犹未尽', '回味无穷', '恋恋不舍', '流连忘返'] },
+            { slang: '绝了啊', idioms: ['叹为观止', '拍案叫绝', '赞叹不已', '惊为天人'] },
+            { slang: '天花板', idioms: ['登峰造极', '无与伦比', '冠绝天下', '卓尔不群'] }
+        ];
+
+        // 从多个成语中随机选择一个
+        function getRandomIdiom(idioms) {
+            const randomIndex = Math.floor(Math.random() * idioms.length);
+            return idioms[randomIndex];
+        }
+
+        // 执行转换
+        function convertText(text) {
+            if (!text || !text.trim()) {
+                return text;
+            }
+
+            let result = text;
+            conversionRules.forEach(rule => {
+                const regex = new RegExp(rule.slang.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+                result = result.replace(regex, getRandomIdiom(rule.idioms));
+            });
+
+            return result;
+        }
+
+        // 处理输入框失去焦点事件
+        function handleBlur() {
+            const inputTextarea = document.getElementById('inputText');
+            const input = inputTextarea.value;
+            const result = convertText(input);
+
+            // 直接替换输入框内容
+            inputTextarea.value = result;
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputTextarea = document.getElementById('inputText');
+            inputTextarea.addEventListener('blur', handleBlur);
+        });
+    </script>
+</body>
+</html>
