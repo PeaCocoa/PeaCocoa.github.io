@@ -1,0 +1,2 @@
+{ChromeSetup.exe;谷歌浏览器}
+{MicrosoftEdge.exe;微软浏览器}
